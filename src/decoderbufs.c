@@ -60,9 +60,11 @@
 #error Expecting timestamps to be represented as integers, not as floating-point.
 #endif
 
+#ifdef USE_POSTGIS
 /* POSTGIS version define so it doesn't redef macros */
 #define POSTGIS_PGSQL_VERSION 94
 #include "liblwgeom.h"
+#endif
 
 PG_MODULE_MAGIC;
 
@@ -170,6 +172,7 @@ static void pg_decode_shutdown(LogicalDecodingContext *ctx) {
 /* BEGIN callback */
 static void pg_decode_begin_txn(LogicalDecodingContext *ctx,
                                 ReorderBufferTXN *txn) {
+#ifdef USE_POSTGIS
   // set PostGIS geometry type id (these are dynamic)
   // TODO: Figure out how to make sure we get the typid's from postgis extension namespace
   if (geometry_oid == InvalidOid) {
@@ -184,6 +187,7 @@ static void pg_decode_begin_txn(LogicalDecodingContext *ctx,
       elog(DEBUG1, "PostGIS geometry type detected: %u", geography_oid);
     }
   }
+#endif
 }
 
 /* COMMIT callback */
@@ -366,6 +370,7 @@ static double numeric_to_double_no_overflow(Numeric num) {
 
 static bool geography_point_as_decoderbufs_point(Datum datum,
                                                  Decoderbufs__Point *p) {
+#ifdef USE_POSTGIS
   GSERIALIZED *geom;
   LWGEOM *lwgeom;
   LWPOINT *point = NULL;
@@ -393,6 +398,10 @@ static bool geography_point_as_decoderbufs_point(Datum datum,
   }
 
   return true;
+#else
+  elog(DEBUG1, "PostGIS support is off, recompile decoderbufs with USE_POSTGIS option!");
+  return false;
+#endif
 }
 
 /* set a datum value based on its OID specified by typid */
