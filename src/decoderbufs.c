@@ -628,6 +628,38 @@ static void tuple_to_tuple_msg(Decoderbufs__DatumMessage **tmsg,
   }
 }
 
+/* provide a metadata for new tuple */
+static void add_metadata_to_msg(Decoderbufs__TypeInfo **tmsg,
+                                Relation relation, HeapTuple tuple,
+                                TupleDesc tupdesc) {
+  int natt;
+  int valid_attr_cnt = 0;
+  elog(DEBUG1, "Adding metadata for %d columns", tupdesc->natts);
+  /* build column names and values */
+  for (natt = 0; natt < tupdesc->natts; natt++) {
+    Form_pg_attribute attr;
+    char *typ_mod;
+    Decoderbufs__TypeInfo typeinfo = DECODERBUFS__TYPE_INFO__INIT;
+
+    attr = tupdesc->attrs[natt];
+
+    /* skip dropped columns and system columns */
+    if (attr->attisdropped || attr->attnum < 0) {
+      elog(DEBUG1, "skipping column %d because %s", natt + 1, attr->attisdropped ? "it's a dropped column" : "it's a system column");
+      continue;
+    }
+
+    typ_mod = TextDatumGetCString(DirectFunctionCall2(format_type, attr->atttypid, attr->atttypmod));
+    elog(DEBUG1, "Adding typemodifier '%s' for column %d", typ_mod, natt);
+
+    typeinfo.modifier = typ_mod;
+    tmsg[valid_attr_cnt] = palloc(sizeof(typeinfo));
+    memcpy(tmsg[valid_attr_cnt], &typeinfo, sizeof(typeinfo));
+
+    valid_attr_cnt++;
+  }
+}
+
 /* callback for individual changed tuples */
 static void pg_decode_change(LogicalDecodingContext *ctx, ReorderBufferTXN *txn,
                              Relation relation, ReorderBufferChange *change) {
@@ -676,10 +708,17 @@ static void pg_decode_change(LogicalDecodingContext *ctx, ReorderBufferTXN *txn,
       if (change->data.tp.newtuple != NULL) {
         elog(DEBUG1, "decoding new tuple information");
         tupdesc = RelationGetDescr(relation);
+
         rmsg.n_new_tuple = valid_attributes_count_from(tupdesc);
         rmsg.new_tuple =
             palloc(sizeof(Decoderbufs__DatumMessage*) * rmsg.n_new_tuple);
         tuple_to_tuple_msg(rmsg.new_tuple, relation,
+                           &change->data.tp.newtuple->tuple, tupdesc);
+
+        rmsg.n_new_typeinfo = rmsg.n_new_tuple;
+        rmsg.new_typeinfo =
+            palloc(sizeof(Decoderbufs__TypeInfo*) * rmsg.n_new_typeinfo);
+        add_metadata_to_msg(rmsg.new_typeinfo, relation,
                            &change->data.tp.newtuple->tuple, tupdesc);
       }
       break;
@@ -700,10 +739,17 @@ static void pg_decode_change(LogicalDecodingContext *ctx, ReorderBufferTXN *txn,
         if (change->data.tp.newtuple != NULL) {
           elog(DEBUG1, "decoding new tuple information");
           tupdesc = RelationGetDescr(relation);
+
           rmsg.n_new_tuple = valid_attributes_count_from(tupdesc);
           rmsg.new_tuple =
               palloc(sizeof(Decoderbufs__DatumMessage*) * rmsg.n_new_tuple);
           tuple_to_tuple_msg(rmsg.new_tuple, relation,
+                             &change->data.tp.newtuple->tuple, tupdesc);
+
+          rmsg.n_new_typeinfo = rmsg.n_new_tuple;
+          rmsg.new_typeinfo =
+              palloc(sizeof(Decoderbufs__TypeInfo*) * rmsg.n_new_typeinfo);
+          add_metadata_to_msg(rmsg.new_typeinfo, relation,
                              &change->data.tp.newtuple->tuple, tupdesc);
         }
       }
