@@ -14,6 +14,6 @@ SHLIB_LINK  += $(PROTOBUF_C_LDFLAGS) $(POSTGIS_C_LDFLAGS)
 
 OBJS = src/decoderbufs.o src/proto/pg_logicaldec.pb-c.o
 
-PG_CONFIG = pg_config
+PG_CONFIG ?= pg_config
 PGXS := $(shell $(PG_CONFIG) --pgxs)
 include $(PGXS)
