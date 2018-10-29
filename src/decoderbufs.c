@@ -280,27 +280,6 @@ static void print_row_msg(StringInfo out, Decoderbufs__RowMessage *rmsg) {
 
 }
 
-/* this doesn't seem to be available in the public api (unfortunate) */
-static double numeric_to_double_no_overflow(Numeric num) {
-  char *tmp;
-  double val;
-  char *endptr;
-
-  tmp = DatumGetCString(DirectFunctionCall1(numeric_out, NumericGetDatum(num)));
-
-  /* unlike float8in, we ignore ERANGE from strtod */
-  val = strtod(tmp, &endptr);
-  if (*endptr != '\0') {
-    /* shouldn't happen ... */
-    ereport(ERROR,
-            (errcode(ERRCODE_INVALID_TEXT_REPRESENTATION),
-             errmsg("invalid input syntax for type double precision: \"%s\"",
-                    tmp)));
-  }
-
-  return val;
-}
-
 static bool geography_point_as_decoderbufs_point(Datum datum,
                                                  Decoderbufs__Point *p) {
 #ifdef USE_POSTGIS
@@ -340,7 +319,6 @@ static bool geography_point_as_decoderbufs_point(Datum datum,
 /* set a datum value based on its OID specified by typid */
 static void set_datum_value(Decoderbufs__DatumMessage *datum_msg, Oid typid,
                             Oid typoutput, Datum datum) {
-  Numeric num;
   bytea *valptr = NULL;
   const char *output = NULL;
   Point *p = NULL;
