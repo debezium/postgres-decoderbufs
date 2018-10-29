@@ -119,9 +119,14 @@ static void pg_decode_startup(LogicalDecodingContext *ctx,
   elog(DEBUG1, "Entering startup callback");
 
   data = palloc(sizeof(DecoderData));
+#if PG_VERSION_NUM >= 90600
+  data->context = AllocSetContextCreate(
+      ctx->context, "decoderbufs context", ALLOCSET_DEFAULT_SIZES);
+#else
   data->context = AllocSetContextCreate(
       ctx->context, "decoderbufs context", ALLOCSET_DEFAULT_MINSIZE,
       ALLOCSET_DEFAULT_INITSIZE, ALLOCSET_DEFAULT_MAXSIZE);
+#endif
   data->debug_mode = false;
   opt->output_type = OUTPUT_PLUGIN_BINARY_OUTPUT;
 
@@ -478,7 +483,7 @@ static int valid_attributes_count_from(TupleDesc tupdesc) {
   int natt;
   int count = 0;
   for (natt = 0; natt < tupdesc->natts; natt++) {
-      Form_pg_attribute attr = tupdesc->attrs[natt];
+      Form_pg_attribute attr = TupleDescAttr(tupdesc, natt);
       
       /* skip dropped columns and system columns */
       if (attr->attisdropped  || attr->attnum < 0) {       
@@ -506,7 +511,7 @@ static void tuple_to_tuple_msg(Decoderbufs__DatumMessage **tmsg,
     bool typisvarlena;
     Decoderbufs__DatumMessage datum_msg = DECODERBUFS__DATUM_MESSAGE__INIT;
 
-    attr = tupdesc->attrs[natt];
+    attr = TupleDescAttr(tupdesc, natt);
     
     /* skip dropped columns and system columns */
     if (attr->attisdropped || attr->attnum < 0) {
@@ -564,7 +569,7 @@ static void add_metadata_to_msg(Decoderbufs__TypeInfo **tmsg,
     Decoderbufs__TypeInfo typeinfo = DECODERBUFS__TYPE_INFO__INIT;
     bool not_null;
 
-    attr = tupdesc->attrs[natt];
+    attr = TupleDescAttr(tupdesc, natt);
 
     /* skip dropped columns and system columns */
     if (attr->attisdropped || attr->attnum < 0) {
