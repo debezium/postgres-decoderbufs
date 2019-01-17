@@ -22,10 +22,11 @@ This code depends on the following libraries and requires them for compilation:
 
 ## Building
 
-To build you will need to install PostgreSQL (for pg_config), PostgreSQL server development packages, protobuf-c for the
-Protocol Buffer support and some PostGIS development packages 
+`postgres-decoderbufs` has to be built from source after installing required dependencies.  The required dependencies are first PostgreSQL
+(for pg_config), PostgreSQL server development packages, protobuf-c for the Protocol Buffer support and some PostGIS development packages.
 
-### Debian
+### Installing Dependencies
+#### Debian
 
     # Core build utilities 
     apt-get update && apt-get install -f -y software-properties-common build-essential pkg-config git postgresql-server-dev-9.6 
@@ -39,14 +40,23 @@ Protocol Buffer support and some PostGIS development packages
 
 The above are taken from the Debezium [docker images](https://github.com/debezium/docker-images).
 
-### Other Linux distributions
+#### Other Linux distributions
 
 You just need to make sure the above software packages (_or some flavour thereof_) are installed for your distro. 
 Note that the last step from the above sequence is only required for Debian to be able to install `libprotobuf-c-dev:1.2.1`
 
-If you have all of the prerequisites installed you should be able to just:
+### Building and installing decoderbufs
 
-    make && make install
+If you have all of the above prerequisites installed, clone this git repo to build from source.  If you have multiple
+postgres versions installed, you can select which version to install by altering your `$PATH` to point to the right version.
+Then `make` and `make install` for each version.  Here is an example:
+
+    git clone https://github.com/debezium/postgres-decoderbufs.git
+    cd postgres-decoderbufs
+    # Install for Postgres 9.6 if I have multiple local versions
+    export PATH=/usr/lib/postgresql/9.6/bin:$PATH
+    make
+    make install
 
 Once the extension has been installed you just need to enable it and logical replication in postgresql.conf:
 
