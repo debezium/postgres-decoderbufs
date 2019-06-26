@@ -28,6 +28,7 @@ message DatumMessage {
       bytes datum_bytes = 9;
       Point datum_point = 10;
     }
+    optional bool column_null = 11;
 }
 
 message TypeInfo {

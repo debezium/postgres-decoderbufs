@@ -61,6 +61,8 @@ struct  _Decoderbufs__DatumMessage
   char *column_name;
   protobuf_c_boolean has_column_type;
   int64_t column_type;
+  protobuf_c_boolean has_column_null;
+  protobuf_c_boolean column_null;
   Decoderbufs__DatumMessage__DatumCase datum_case;
   union {
     int32_t datum_int32;
@@ -75,7 +77,7 @@ struct  _Decoderbufs__DatumMessage
 };
 #define DECODERBUFS__DATUM_MESSAGE__INIT \
  { PROTOBUF_C_MESSAGE_INIT (&decoderbufs__datum_message__descriptor) \
-    , NULL, 0,0, DECODERBUFS__DATUM_MESSAGE__DATUM__NOT_SET, {0} }
+    , NULL, 0,0, 0,0, DECODERBUFS__DATUM_MESSAGE__DATUM__NOT_SET, {0} }
 
 
 struct  _Decoderbufs__TypeInfo

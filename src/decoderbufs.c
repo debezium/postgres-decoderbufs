@@ -456,6 +456,7 @@ static void tuple_to_tuple_msg(Decoderbufs__DatumMessage **tmsg,
       }
     } else {
       elog(DEBUG1, "column %s is null, ignoring value", attrName);  
+      datum_msg.has_column_null = datum_msg.column_null = true;
     }
 
     tmsg[valid_attr_cnt] = palloc(sizeof(datum_msg));
