@@ -304,23 +304,21 @@ static void set_datum_value(Decoderbufs__DatumMessage *datum_msg, Oid typid,
     case TIMESTAMPOID:
       ts = DatumGetTimestamp(datum);
       if (TIMESTAMP_NOT_FINITE(ts)) {
-           ereport(ERROR, (errcode(ERRCODE_DATETIME_VALUE_OUT_OF_RANGE),
-           errmsg("timestamp \'%s\'out of range", ts ? strVal(ts) : "(null)")));
+           datum_msg->datum_int64 = ts;
       } else {
            datum_msg->datum_int64 = TIMESTAMPTZ_TO_USEC_SINCE_EPOCH(ts);
-           datum_msg->datum_case = DECODERBUFS__DATUM_MESSAGE__DATUM_DATUM_INT64;
-           break;
       }
+      datum_msg->datum_case = DECODERBUFS__DATUM_MESSAGE__DATUM_DATUM_INT64;
+      break;
     case TIMESTAMPTZOID:
       ts = DatumGetTimestampTz(datum);
       if (TIMESTAMP_NOT_FINITE(ts)) {
-           ereport(ERROR, (errcode(ERRCODE_DATETIME_VALUE_OUT_OF_RANGE),
-           errmsg("timestamp \'%s\'out of range", ts ? strVal(ts) : "(null)")));
-       } else {
+           datum_msg->datum_int64 = ts;
+      } else {
            datum_msg->datum_int64 = TIMESTAMPTZ_TO_USEC_SINCE_EPOCH(ts);
-           datum_msg->datum_case = DECODERBUFS__DATUM_MESSAGE__DATUM_DATUM_INT64;
-           break;
-        }
+      }
+      datum_msg->datum_case = DECODERBUFS__DATUM_MESSAGE__DATUM_DATUM_INT64;
+      break;
     case DATEOID:
       /* simply get the number of days as the stored 32 bit value and convert to EPOCH */
       datum_msg->datum_int32 = DATE_TO_DAYS_SINCE_EPOCH(DatumGetDateADT(datum));
