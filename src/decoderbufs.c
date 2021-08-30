@@ -269,8 +269,11 @@ static void set_datum_value(Decoderbufs__DatumMessage *datum_msg, Oid typid,
       datum_msg->datum_case = DECODERBUFS__DATUM_MESSAGE__DATUM_DATUM_INT32;
       break;
     case INT8OID:
-    case OIDOID:
       datum_msg->datum_int64 = DatumGetInt64(datum);
+      datum_msg->datum_case = DECODERBUFS__DATUM_MESSAGE__DATUM_DATUM_INT64;
+      break;
+    case OIDOID:
+      datum_msg->datum_int64 = (Oid) DatumGetUInt64(datum);
       datum_msg->datum_case = DECODERBUFS__DATUM_MESSAGE__DATUM_DATUM_INT64;
       break;
     case FLOAT4OID:
