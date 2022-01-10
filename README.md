@@ -18,21 +18,17 @@ This code depends on the following libraries and requires them for compilation:
 
 * [PostgreSQL](http://www.postgresql.org) 9.6+
 * [Protobuf-c](https://github.com/protobuf-c/protobuf-c) 1.2+ - used for data serialization
-* [PostGIS](http://www.postgis.net/) 2.1+ - used for Postgres geometric types support
 
 ## Building
 
 `postgres-decoderbufs` has to be built from source after installing required dependencies.  The required dependencies are first PostgreSQL
-(for pg_config), PostgreSQL server development packages, protobuf-c for the Protocol Buffer support and some PostGIS development packages.
+(for pg_config), PostgreSQL server development packages, and protobuf-c for the Protocol Buffer support.
 
 ### Installing Dependencies
 #### Debian
 
     # Core build utilities 
     apt-get update && apt-get install -f -y software-properties-common build-essential pkg-config git postgresql-server-dev-9.6 
-    
-    # PostGIS dependency
-    apt-get install -f -y libproj-dev liblwgeom-dev
 
     # Protobuf-c dependency (requires a non-stable Debian repo)
     add-apt-repository "deb http://ftp.debian.org/debian testing main contrib" && apt-get update
@@ -139,8 +135,6 @@ The following table shows how current PostgreSQL type OIDs are mapped to which d
 | TIMESTAMPTZOID      | datum_string  |
 | BYTEAOID            | datum_bytes   |
 | POINTOID            | datum_point   |
-| PostGIS geometry    | datum_point   |
-| PostGIS geography   | datum_point   |
 
 ## Support
 

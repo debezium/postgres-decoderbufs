@@ -12,13 +12,10 @@ Source0:	https://github.com/debezium/%{name}/archive/v%{full_version}.tar.gz
 
 BuildRequires:	gcc
 BuildRequires:	postgresql-devel >= 9.6, postgresql-server-devel >= 9.6
-BuildRequires:	postgis-devel >= 2
 BuildRequires:	protobuf-c-devel
 
 Requires:	protobuf-c
 %{?postgresql_module_requires}
-
-Recommends:	postgis
 
 %description
 A PostgreSQL logical decoder output plugin to deliver data as Protocol Buffers messages.
