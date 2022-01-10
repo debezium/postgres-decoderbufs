@@ -1,5 +1,6 @@
 MODULE_big = decoderbufs
 EXTENSION = decoderbufs
+REGRESS = decoderbufs
 
 PROTOBUF_C_CFLAGS = $(shell pkg-config --cflags 'libprotobuf-c >= 1.0.0')
 PROTOBUF_C_LDFLAGS = $(shell pkg-config --libs 'libprotobuf-c >= 1.0.0')
