@@ -27,12 +27,9 @@ This code depends on the following libraries and requires them for compilation:
 ### Installing Dependencies
 #### Debian
 
-    # Core build utilities 
-    apt-get update && apt-get install -f -y software-properties-common build-essential pkg-config git postgresql-server-dev-9.6 
-
-    # Protobuf-c dependency (requires a non-stable Debian repo)
-    add-apt-repository "deb http://ftp.debian.org/debian testing main contrib" && apt-get update
-    apt-get install -y libprotobuf-c-dev=1.2.1-1+b1
+    # Core build utilities
+    apt-get update
+    apt-get install -f -y build-essential pkg-config git libprotobuf-c-dev postgresql-server-dev-all
 
 When updating the ProtoBuf definition, also install the ProtoBuf C compiler:
 
@@ -43,7 +40,6 @@ The above are taken from the Debezium [container images](https://github.com/debe
 #### Other Linux distributions
 
 You just need to make sure the above software packages (_or some flavour thereof_) are installed for your distro. 
-Note that the last step from the above sequence is only required for Debian to be able to install `libprotobuf-c-dev:1.2.1`
 
 ### Getting the source code
 
