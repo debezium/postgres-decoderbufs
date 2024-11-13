@@ -61,9 +61,9 @@
 #endif
 
 #if PG_VERSION_NUM >= 170000
-#define TUPLE_ACCESS
+#define TUPLE_ACCESS(x) x
 #else
-#define TUPLE_ACCESS ->tuple
+#define TUPLE_ACCESS(x) &x->tuple
 #endif
 
 PG_MODULE_MAGIC;
@@ -628,13 +628,13 @@ static void pg_decode_change(LogicalDecodingContext *ctx, ReorderBufferTXN *txn,
         rmsg.new_tuple =
             palloc(sizeof(Decoderbufs__DatumMessage*) * rmsg.n_new_tuple);
         tuple_to_tuple_msg(rmsg.new_tuple, relation,
-                           &change->data.tp.newtuple TUPLE_ACCESS, tupdesc);
+                           TUPLE_ACCESS(change->data.tp.newtuple), tupdesc);
 
         rmsg.n_new_typeinfo = rmsg.n_new_tuple;
         rmsg.new_typeinfo =
             palloc(sizeof(Decoderbufs__TypeInfo*) * rmsg.n_new_typeinfo);
         add_metadata_to_msg(rmsg.new_typeinfo, relation,
-                           &change->data.tp.newtuple TUPLE_ACCESS, tupdesc);
+                           TUPLE_ACCESS(change->data.tp.newtuple), tupdesc);
       }
       break;
     case REORDER_BUFFER_CHANGE_UPDATE:
@@ -649,7 +649,7 @@ static void pg_decode_change(LogicalDecodingContext *ctx, ReorderBufferTXN *txn,
           rmsg.old_tuple =
               palloc(sizeof(Decoderbufs__DatumMessage*) * rmsg.n_old_tuple);
           tuple_to_tuple_msg(rmsg.old_tuple, relation,
-                             &change->data.tp.oldtuple TUPLE_ACCESS, tupdesc);
+                             TUPLE_ACCESS(change->data.tp.oldtuple), tupdesc);
         }
         if (change->data.tp.newtuple != NULL) {
           elog(DEBUG1, "decoding new tuple information");
@@ -659,13 +659,13 @@ static void pg_decode_change(LogicalDecodingContext *ctx, ReorderBufferTXN *txn,
           rmsg.new_tuple =
               palloc(sizeof(Decoderbufs__DatumMessage*) * rmsg.n_new_tuple);
           tuple_to_tuple_msg(rmsg.new_tuple, relation,
-                             &change->data.tp.newtuple TUPLE_ACCESS, tupdesc);
+                             TUPLE_ACCESS(change->data.tp.newtuple), tupdesc);
 
           rmsg.n_new_typeinfo = rmsg.n_new_tuple;
           rmsg.new_typeinfo =
               palloc(sizeof(Decoderbufs__TypeInfo*) * rmsg.n_new_typeinfo);
           add_metadata_to_msg(rmsg.new_typeinfo, relation,
-                             &change->data.tp.newtuple TUPLE_ACCESS, tupdesc);
+                             TUPLE_ACCESS(change->data.tp.newtuple), tupdesc);
         }
       }
       break;
@@ -681,7 +681,7 @@ static void pg_decode_change(LogicalDecodingContext *ctx, ReorderBufferTXN *txn,
         rmsg.old_tuple =
             palloc(sizeof(Decoderbufs__DatumMessage*) *  rmsg.n_old_tuple);
         tuple_to_tuple_msg(rmsg.old_tuple, relation,
-                           &change->data.tp.oldtuple TUPLE_ACCESS, tupdesc);
+                           TUPLE_ACCESS(change->data.tp.oldtuple), tupdesc);
       } else {
         elog(DEBUG1, "no information to decode from DELETE because either no PK is present or REPLICA IDENTITY NOTHING or invalid ");
       }
