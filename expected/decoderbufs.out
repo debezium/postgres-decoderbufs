@@ -1,0 +1,27 @@
+select slot_name from pg_create_logical_replication_slot('decoderbufs_demo', 'decoderbufs');
+INFO:  Exiting startup callback
+    slot_name     
+------------------
+ decoderbufs_demo
+(1 row)
+
+create table foo (id int primary key, data text);
+insert into foo values (1, 'Important stuff');
+select regexp_replace(data, '(txid|commit_time)\[\d+\]', '\1[***]', 'g') as data
+from pg_logical_slot_peek_changes('decoderbufs_demo', NULL, NULL, 'debug-mode', '1');
+NOTICE:  Decoderbufs DEBUG MODE is ON.
+INFO:  Exiting startup callback
+                            data                            
+------------------------------------------------------------
+ txid[***], commit_time[***], op[3]
+ txid[***], commit_time[***], op[4]
+ txid[***], commit_time[***], op[3]
+ txid[***], commit_time[***], table[public.foo], op[0]     +
+ NEW TUPLE:                                                +
+ column_name[id], column_type[23], datum[1]                +
+ column_name[data], column_type[25], datum[Important stuff]+
+                                                           +
+ 
+ txid[***], commit_time[***], op[4]
+(5 rows)
+
