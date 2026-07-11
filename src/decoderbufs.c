@@ -98,7 +98,26 @@ void _PG_init(void) {}
 
 /* specify output plugin callbacks */
 void _PG_output_plugin_init(OutputPluginCallbacks *cb) {
+#if PG_VERSION_NUM >= 190000
+  /*
+   * PG19 renamed AssertVariableIsOfType() to StaticAssertVariableIsOfType(),
+   * but that macro's definition in c.h uses the bare `typeof` keyword, which
+   * is only available under a GNU C dialect or C23 -- it is not available
+   * under strict `-std=c11`/`-std=c17`, which is what PGXS's CFLAGS use here.
+   * That makes the upstream macro itself fail to compile in this
+   * configuration. Perform the same compile-time type check ourselves using
+   * the double-underscored `__typeof__` GNU extension instead, which (unlike
+   * bare `typeof`) remains available in strict-ANSI modes on gcc and clang.
+   * This is a compile-time-only sanity check with no effect on behavior, so
+   * it's fine to skip it entirely on toolchains lacking the builtin.
+   */
+#if defined(HAVE__BUILTIN_TYPES_COMPATIBLE_P) || defined(__GNUC__) || defined(__clang__)
+  StaticAssertDecl(__builtin_types_compatible_p(__typeof__(&_PG_output_plugin_init), LogicalOutputPluginInit),
+                    "_PG_output_plugin_init does not have type LogicalOutputPluginInit");
+#endif
+#else
   AssertVariableIsOfType(&_PG_output_plugin_init, LogicalOutputPluginInit);
+#endif
   cb->startup_cb = pg_decode_startup;
   cb->begin_cb = pg_decode_begin_txn;
   cb->change_cb = pg_decode_change;
@@ -432,7 +451,7 @@ static void tuple_to_tuple_msg(Decoderbufs__DatumMessage **tmsg,
     /* query output function */
     getTypeOutputInfo(attr->atttypid, &typoutput, &typisvarlena);
     if (!isnull) {
-      if (typisvarlena && VARATT_IS_EXTERNAL_ONDISK(origval)) {
+      if (typisvarlena && VARATT_IS_EXTERNAL_ONDISK(DatumGetPointer(origval))) {
         datum_msg.datum_missing = true;
         datum_msg.datum_case = DECODERBUFS__DATUM_MESSAGE__DATUM_DATUM_MISSING;
         elog(DEBUG1, "Not handling external on disk varlena at the moment.");
@@ -506,7 +525,10 @@ static void pg_decode_begin_txn(LogicalDecodingContext *ctx,
   rmsg.has_op = true;
   rmsg.transaction_id = txn->xid;
   rmsg.has_transaction_id = true;
-#if PG_VERSION_NUM >= 150000
+#if PG_VERSION_NUM >= 190000
+  /* PG19 made the commit/prepare/abort_time union anonymous again */
+  rmsg.commit_time = TIMESTAMPTZ_TO_USEC_SINCE_EPOCH(txn->commit_time);
+#elif PG_VERSION_NUM >= 150000
   rmsg.commit_time = TIMESTAMPTZ_TO_USEC_SINCE_EPOCH(txn->xact_time.commit_time);
 #else
   rmsg.commit_time = TIMESTAMPTZ_TO_USEC_SINCE_EPOCH(txn->commit_time);
@@ -548,7 +570,10 @@ static void pg_decode_commit_txn(LogicalDecodingContext *ctx,
   rmsg.has_op = true;
   rmsg.transaction_id = txn->xid;
   rmsg.has_transaction_id = true;
-#if PG_VERSION_NUM >= 150000
+#if PG_VERSION_NUM >= 190000
+  /* PG19 made the commit/prepare/abort_time union anonymous again */
+  rmsg.commit_time = TIMESTAMPTZ_TO_USEC_SINCE_EPOCH(txn->commit_time);
+#elif PG_VERSION_NUM >= 150000
   rmsg.commit_time = TIMESTAMPTZ_TO_USEC_SINCE_EPOCH(txn->xact_time.commit_time);
 #else
   rmsg.commit_time = TIMESTAMPTZ_TO_USEC_SINCE_EPOCH(txn->commit_time);
@@ -604,7 +629,10 @@ static void pg_decode_change(LogicalDecodingContext *ctx, ReorderBufferTXN *txn,
   /* set common fields */
   rmsg.transaction_id = txn->xid;
   rmsg.has_transaction_id = true;
-#if PG_VERSION_NUM >= 150000
+#if PG_VERSION_NUM >= 190000
+  /* PG19 made the commit/prepare/abort_time union anonymous again */
+  rmsg.commit_time = TIMESTAMPTZ_TO_USEC_SINCE_EPOCH(txn->commit_time);
+#elif PG_VERSION_NUM >= 150000
   rmsg.commit_time = TIMESTAMPTZ_TO_USEC_SINCE_EPOCH(txn->xact_time.commit_time);
 #else
   rmsg.commit_time = TIMESTAMPTZ_TO_USEC_SINCE_EPOCH(txn->commit_time);
